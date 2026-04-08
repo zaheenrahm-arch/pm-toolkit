@@ -30,7 +30,40 @@
     line-height: 1.6;
   }
 
-  /* HEADER */
+  .api-banner {
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--rule);
+    padding: 0.6rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .api-banner label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .api-banner input {
+    flex: 1;
+    max-width: 400px;
+    background: var(--paper);
+    border: 1.5px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.38rem 0.75rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+  }
+  .api-banner input:focus { border-color: var(--accent); }
+  .api-banner .api-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
   header {
     border-bottom: 1.5px solid var(--ink);
     padding: 1.25rem 2rem;
@@ -42,272 +75,78 @@
     top: 0;
     z-index: 10;
   }
-  .logo {
-    font-family: var(--serif);
-    font-size: 1.3rem;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-  }
+  .logo { font-family: var(--serif); font-size: 1.3rem; letter-spacing: -0.01em; color: var(--ink); }
   .logo span { color: var(--accent); }
-  .tagline {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    border-left: 1.5px solid var(--rule);
-    padding-left: 1rem;
-  }
+  .tagline { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.04em; border-left: 1.5px solid var(--rule); padding-left: 1rem; }
 
-  /* LAYOUT */
-  main {
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    min-height: calc(100vh - 58px);
-  }
+  main { display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 100px); }
 
-  /* INPUT PANEL */
-  .panel-input {
-    border-right: 1.5px solid var(--ink);
-    padding: 2rem;
-    background: var(--cream);
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 0.25rem;
-  }
-
+  .panel-input { border-right: 1.5px solid var(--ink); padding: 2rem; background: var(--cream); display: flex; flex-direction: column; gap: 1.25rem; }
+  .panel-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 0.25rem; }
   .field-group { display: flex; flex-direction: column; gap: 0.35rem; }
 
-  input[type="text"], textarea, select {
-    background: var(--paper);
-    border: 1.5px solid var(--rule);
-    border-radius: 4px;
-    padding: 0.65rem 0.85rem;
-    font-family: var(--sans);
-    font-size: 14px;
-    color: var(--ink);
-    width: 100%;
-    transition: border-color 0.15s;
-    outline: none;
-    resize: vertical;
+  input[type="text"], input[type="password"], textarea, select {
+    background: var(--paper); border: 1.5px solid var(--rule); border-radius: 4px;
+    padding: 0.65rem 0.85rem; font-family: var(--sans); font-size: 14px;
+    color: var(--ink); width: 100%; transition: border-color 0.15s; outline: none; resize: vertical;
   }
-  input[type="text"]:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
-  }
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
   textarea { min-height: 90px; }
 
   .btn-generate {
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    border-radius: 4px;
-    padding: 0.85rem 1.5rem;
-    font-family: var(--mono);
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: background 0.15s, transform 0.1s;
-    margin-top: auto;
+    background: var(--ink); color: var(--paper); border: none; border-radius: 4px;
+    padding: 0.85rem 1.5rem; font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: background 0.15s, transform 0.1s; margin-top: auto;
   }
   .btn-generate:hover { background: var(--accent); }
   .btn-generate:active { transform: scale(0.98); }
   .btn-generate:disabled { background: var(--rule); cursor: not-allowed; }
 
-  .dot-loader {
-    display: none;
-    gap: 4px;
-    align-items: center;
-  }
-  .dot-loader span {
-    width: 6px; height: 6px;
-    background: var(--paper);
-    border-radius: 50%;
-    animation: pulse 1s ease-in-out infinite;
-  }
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 6px; height: 6px; background: var(--paper); border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
   .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
   .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
 
-  /* OUTPUT PANEL */
-  .panel-output {
-    padding: 2.5rem 2.5rem 3rem;
-    overflow-y: auto;
-  }
+  .panel-output { padding: 2.5rem 2.5rem 3rem; overflow-y: auto; }
 
-  .output-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    text-align: center;
-    color: var(--muted);
-    gap: 1rem;
-  }
-  .output-empty .big-char {
-    font-family: var(--serif);
-    font-size: 5rem;
-    line-height: 1;
-    color: var(--rule);
-  }
-  .output-empty p {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    max-width: 260px;
-  }
+  .output-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; color: var(--muted); gap: 1rem; }
+  .output-empty .big-char { font-family: var(--serif); font-size: 5rem; line-height: 1; color: var(--rule); }
+  .output-empty p { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--muted); max-width: 260px; }
 
-  /* PRD OUTPUT */
   #prd-output { display: none; }
 
-  .prd-header {
-    border-bottom: 1.5px solid var(--ink);
-    padding-bottom: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  .prd-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    margin-bottom: 0.6rem;
-    display: flex;
-    gap: 1.5rem;
-  }
-  .prd-title {
-    font-family: var(--serif);
-    font-size: 2.2rem;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.5rem;
-  }
-  .status-badge {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    padding: 3px 10px;
-    border-radius: 2px;
-    background: var(--accent-light);
-    color: var(--accent);
-    border: 1px solid var(--accent);
-  }
+  .prd-header { border-bottom: 1.5px solid var(--ink); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  .prd-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; margin-bottom: 0.6rem; display: flex; gap: 1.5rem; }
+  .prd-title { font-family: var(--serif); font-size: 2.2rem; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+  .status-badge { display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 2px; background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); }
 
   .prd-section { margin-bottom: 2rem; }
-  .prd-section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 0.4rem;
-    margin-bottom: 0.85rem;
-  }
-  .prd-section p {
-    font-size: 14px;
-    line-height: 1.75;
-    color: var(--ink);
-    margin-bottom: 0.5rem;
-  }
-  .prd-section ul, .prd-section ol {
-    padding-left: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
+  .prd-section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.4rem; margin-bottom: 0.85rem; }
+  .prd-section p { font-size: 14px; line-height: 1.75; color: var(--ink); margin-bottom: 0.5rem; }
+  .prd-section ul, .prd-section ol { padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
   .prd-section li { font-size: 14px; line-height: 1.65; }
 
-  /* Story cards */
-  .story-card {
-    background: var(--paper);
-    border: 1.5px solid var(--rule);
-    border-radius: 4px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.75rem;
-  }
-  .story-id {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    margin-bottom: 0.35rem;
-  }
+  .story-card { background: var(--paper); border: 1.5px solid var(--rule); border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
+  .story-id { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 0.35rem; }
   .story-text { font-size: 14px; line-height: 1.65; }
-  .story-ac {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--rule);
-  }
-  .story-ac-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    margin-bottom: 0.35rem;
-  }
+  .story-ac { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--rule); }
+  .story-ac-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.35rem; }
   .story-ac ul { padding-left: 1.1rem; }
   .story-ac li { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  /* Risk table */
   .risk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .risk-table th {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1.5px solid var(--rule);
-  }
-  .risk-table td {
-    padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid var(--rule);
-    vertical-align: top;
-    line-height: 1.55;
-  }
+  .risk-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1.5px solid var(--rule); }
+  .risk-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.55; }
   .risk-table tr:last-child td { border-bottom: none; }
   .risk-hi { color: var(--accent); font-weight: 600; }
   .risk-med { color: #a07030; font-weight: 600; }
   .risk-lo { color: #3a7a4a; font-weight: 600; }
 
-  .btn-copy {
-    background: transparent;
-    border: 1.5px solid var(--rule);
-    border-radius: 4px;
-    padding: 0.55rem 1.1rem;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    color: var(--muted);
-    transition: border-color 0.15s, color 0.15s;
-  }
+  .btn-copy { background: transparent; border: 1.5px solid var(--rule); border-radius: 4px; padding: 0.55rem 1.1rem; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; cursor: pointer; color: var(--muted); transition: border-color 0.15s, color 0.15s; }
   .btn-copy:hover { border-color: var(--ink); color: var(--ink); }
-
-  .prd-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1.5px solid var(--rule);
-  }
-
-  /* Streaming cursor */
-  .cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); vertical-align: text-bottom; animation: blink 0.8s step-end infinite; margin-left: 2px; }
-  @keyframes blink { 50%{opacity:0;} }
+  .prd-actions { display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1.5px solid var(--rule); }
 
   @media (max-width: 800px) {
     main { grid-template-columns: 1fr; }
@@ -317,34 +156,35 @@
 </head>
 <body>
 
+<div class="api-banner">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="api-hint">stored in your browser only</span>
+</div>
+
 <header>
   <div class="logo">PRD<span>.</span>gen</div>
   <div class="tagline">AI-powered product requirements // portfolio project</div>
 </header>
 
 <main>
-  <!-- INPUT PANEL -->
   <aside class="panel-input">
     <div class="field-group">
       <div class="panel-label">Feature name</div>
       <input type="text" id="feature-name" placeholder="e.g. Dark mode toggle" />
     </div>
-
     <div class="field-group">
       <div class="panel-label">Product / platform</div>
       <input type="text" id="product-name" placeholder="e.g. Masisi Radio web app" />
     </div>
-
     <div class="field-group">
       <div class="panel-label">Target users</div>
       <input type="text" id="target-users" placeholder="e.g. Casual listeners, mobile-first" />
     </div>
-
     <div class="field-group">
       <div class="panel-label">Problem being solved</div>
       <textarea id="problem" placeholder="Briefly describe the core user problem this feature addresses..."></textarea>
     </div>
-
     <div class="field-group">
       <div class="panel-label">Priority level</div>
       <select id="priority">
@@ -354,19 +194,16 @@
         <option value="P3 — Low">P3 — Low</option>
       </select>
     </div>
-
     <div class="field-group">
       <div class="panel-label">Additional context (optional)</div>
-      <textarea id="context" placeholder="Constraints, technical notes, edge cases to consider..." style="min-height:65px;"></textarea>
+      <textarea id="context" placeholder="Constraints, technical notes, edge cases..." style="min-height:65px;"></textarea>
     </div>
-
     <button class="btn-generate" id="generate-btn" onclick="generatePRD()">
       <span id="btn-text">Generate PRD →</span>
       <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
     </button>
   </aside>
 
-  <!-- OUTPUT PANEL -->
   <section class="panel-output">
     <div class="output-empty" id="empty-state">
       <div class="big-char">§</div>
@@ -383,9 +220,7 @@
         <h1 class="prd-title" id="out-title"></h1>
         <span class="status-badge">DRAFT</span>
       </div>
-
       <div id="prd-body"></div>
-
       <div class="prd-actions">
         <button class="btn-copy" onclick="copyPRD()">Copy as text</button>
         <button class="btn-copy" onclick="resetForm()">New PRD</button>
@@ -396,6 +231,7 @@
 
 <script>
 async function generatePRD() {
+  const apiKey = document.getElementById('api-key').value.trim();
   const feature = document.getElementById('feature-name').value.trim();
   const product = document.getElementById('product-name').value.trim();
   const users = document.getElementById('target-users').value.trim();
@@ -403,10 +239,8 @@ async function generatePRD() {
   const priority = document.getElementById('priority').value;
   const context = document.getElementById('context').value.trim();
 
-  if (!feature || !product || !problem) {
-    alert('Please fill in feature name, product, and problem statement.');
-    return;
-  }
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!feature || !product || !problem) { alert('Please fill in feature name, product, and problem statement.'); return; }
 
   const btn = document.getElementById('generate-btn');
   const loader = document.getElementById('loader');
@@ -414,7 +248,6 @@ async function generatePRD() {
   btn.disabled = true;
   btnText.style.display = 'none';
   loader.style.display = 'flex';
-
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('prd-output').style.display = 'none';
 
@@ -431,34 +264,22 @@ Write a complete PRD in JSON format. Return ONLY valid JSON, no markdown backtic
 
 JSON structure:
 {
-  "overview": "2-3 sentence executive summary of the feature and its strategic value",
+  "overview": "2-3 sentence executive summary",
   "problem": "Clear articulation of the user problem and why it matters now",
   "goals": ["goal 1", "goal 2", "goal 3"],
-  "non_goals": ["what this feature explicitly will NOT do — 2-3 items"],
+  "non_goals": ["out of scope item 1", "out of scope item 2"],
   "user_stories": [
-    {
-      "id": "US-01",
-      "story": "As a [user type], I want to [action] so that [benefit].",
-      "acceptance_criteria": ["AC 1", "AC 2", "AC 3"]
-    },
-    {
-      "id": "US-02",
-      "story": "As a [user type], I want to [action] so that [benefit].",
-      "acceptance_criteria": ["AC 1", "AC 2", "AC 3"]
-    },
-    {
-      "id": "US-03",
-      "story": "As a [user type], I want to [action] so that [benefit].",
-      "acceptance_criteria": ["AC 1", "AC 2"]
-    }
+    { "id": "US-01", "story": "As a [user], I want to [action] so that [benefit].", "acceptance_criteria": ["AC 1", "AC 2", "AC 3"] },
+    { "id": "US-02", "story": "As a [user], I want to [action] so that [benefit].", "acceptance_criteria": ["AC 1", "AC 2", "AC 3"] },
+    { "id": "US-03", "story": "As a [user], I want to [action] so that [benefit].", "acceptance_criteria": ["AC 1", "AC 2"] }
   ],
   "success_metrics": [
-    {"metric": "Metric name", "target": "Specific measurable target", "measurement": "How to measure it"}
+    { "metric": "Metric name", "target": "Specific measurable target", "measurement": "How to measure it" }
   ],
   "risks": [
-    {"risk": "Risk description", "severity": "High", "mitigation": "Mitigation strategy"},
-    {"risk": "Risk description", "severity": "Medium", "mitigation": "Mitigation strategy"},
-    {"risk": "Risk description", "severity": "Low", "mitigation": "Mitigation strategy"}
+    { "risk": "Risk description", "severity": "High", "mitigation": "Mitigation strategy" },
+    { "risk": "Risk description", "severity": "Medium", "mitigation": "Mitigation strategy" },
+    { "risk": "Risk description", "severity": "Low", "mitigation": "Mitigation strategy" }
   ],
   "open_questions": ["Question 1?", "Question 2?", "Question 3?"]
 }`;
@@ -466,7 +287,12 @@ JSON structure:
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
@@ -475,12 +301,13 @@ JSON structure:
     });
 
     const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
     const raw = data.content.map(b => b.text || '').join('');
     const clean = raw.replace(/```json|```/g, '').trim();
     const prd = JSON.parse(clean);
     renderPRD(prd, feature, product, priority);
   } catch (err) {
-    alert('Something went wrong generating the PRD. Please try again.');
+    alert('Something went wrong. Check your API key and try again.');
     console.error(err);
   } finally {
     btn.disabled = false;
@@ -496,19 +323,14 @@ function renderPRD(prd, feature, product, priority) {
   document.getElementById('out-priority').textContent = priority;
 
   let html = '';
-
-  // Overview
   html += section('Overview', `<p>${prd.overview}</p>`);
-
-  // Problem
   html += section('Problem statement', `<p>${prd.problem}</p>`);
 
-  // Goals & non-goals
-  const goalsHtml = `<ul>${prd.goals.map(g => `<li>${g}</li>`).join('')}</ul>`;
-  const nonGoalsHtml = `<p style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.06em;margin:0.75rem 0 0.35rem;">OUT OF SCOPE</p><ul>${prd.non_goals.map(g => `<li style="color:var(--muted)">${g}</li>`).join('')}</ul>`;
-  html += section('Goals', goalsHtml + nonGoalsHtml);
+  const goalsHtml = `<ul>${prd.goals.map(g => `<li>${g}</li>`).join('')}</ul>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.06em;margin:0.75rem 0 0.35rem;">OUT OF SCOPE</p>
+    <ul>${prd.non_goals.map(g => `<li style="color:var(--muted)">${g}</li>`).join('')}</ul>`;
+  html += section('Goals', goalsHtml);
 
-  // User stories
   const storiesHtml = prd.user_stories.map(s => `
     <div class="story-card">
       <div class="story-id">${s.id}</div>
@@ -517,39 +339,28 @@ function renderPRD(prd, feature, product, priority) {
         <div class="story-ac-label">Acceptance criteria</div>
         <ul>${s.acceptance_criteria.map(ac => `<li>${ac}</li>`).join('')}</ul>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
   html += section('User stories', storiesHtml);
 
-  // Success metrics
   const metricsHtml = prd.success_metrics.map(m => `
     <div style="background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:0.85rem 1.1rem;margin-bottom:0.6rem;">
       <div style="font-weight:600;font-size:14px;margin-bottom:0.25rem;">${m.metric}</div>
       <div style="font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:0.2rem;">Target: ${m.target}</div>
       <div style="font-size:13px;color:var(--muted);">${m.measurement}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
   html += section('Success metrics', metricsHtml);
 
-  // Risks
-  const riskHtml = `
-    <table class="risk-table">
-      <thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
-      <tbody>
-        ${prd.risks.map(r => `
-          <tr>
-            <td>${r.risk}</td>
-            <td><span class="${r.severity === 'High' ? 'risk-hi' : r.severity === 'Medium' ? 'risk-med' : 'risk-lo'}">${r.severity}</span></td>
-            <td>${r.mitigation}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>`;
+  const riskHtml = `<table class="risk-table">
+    <thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+    <tbody>${prd.risks.map(r => `
+      <tr>
+        <td>${r.risk}</td>
+        <td><span class="${r.severity === 'High' ? 'risk-hi' : r.severity === 'Medium' ? 'risk-med' : 'risk-lo'}">${r.severity}</span></td>
+        <td>${r.mitigation}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
   html += section('Risks', riskHtml);
-
-  // Open questions
-  const oqHtml = `<ol>${prd.open_questions.map(q => `<li>${q}</li>`).join('')}</ol>`;
-  html += section('Open questions', oqHtml);
+  html += section('Open questions', `<ol>${prd.open_questions.map(q => `<li>${q}</li>`).join('')}</ol>`);
 
   document.getElementById('prd-body').innerHTML = html;
   document.getElementById('prd-output').style.display = 'block';
@@ -557,10 +368,7 @@ function renderPRD(prd, feature, product, priority) {
 }
 
 function section(label, content) {
-  return `<div class="prd-section">
-    <div class="prd-section-label">${label}</div>
-    ${content}
-  </div>`;
+  return `<div class="prd-section"><div class="prd-section-label">${label}</div>${content}</div>`;
 }
 
 function copyPRD() {
