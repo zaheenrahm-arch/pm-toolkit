@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/26581162/README.md)
+[README.md](https://github.com/user-attachments/files/26791203/README.md)
 # pm-toolkit
 
 10 AI-powered PM tools built to spec. Each one demonstrates a core product management skill through a working interface — PRD writing, sprint retros, OKR setting, user research synthesis, and more.
@@ -12,7 +12,7 @@ Built with the Anthropic API. Each tool runs in the browser with no backend requ
 | # | Tool | Skill | Status |
 |---|------|-------|--------|
 | 01 | [PRD Generator](https://zaheenrahm-arch.github.io/pm-toolkit/prd-generator) | Requirements writing | ✅ Live |
-| 02 | Sprint Retrospective Analyzer | Agile process | 🔜 Coming soon |
+| 02 | [Sprint Retrospective Analyzer](https://zaheenrahm-arch.github.io/pm-toolkit/retro-analyzer) | Agile process | ✅ Live |
 | 03 | User Interview Insight Extractor | User research synthesis | 🔜 Coming soon |
 | 04 | Stakeholder Update Writer | Stakeholder comms | 🔜 Coming soon |
 | 05 | Feature Prioritization Assistant | Roadmapping & RICE/MoSCoW | 🔜 Coming soon |
