@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Retro Analyzer — Sprint Retrospective Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Epilogue:wght@300;400;500&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141416;
+    --surface2: #1c1c20;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --text: #f0ede8;
+    --muted: #6b6870;
+    --dim: #3a3840;
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --green-border: rgba(74,222,128,0.25);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --amber-border: rgba(251,191,36,0.25);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --red-border: rgba(248,113,113,0.25);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --blue-border: rgba(96,165,250,0.25);
+    --mono: 'Fira Code', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'Epilogue', sans-serif;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .logo {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .logo em { color: var(--green); font-style: normal; }
+  .sep { width: 1px; height: 18px; background: var(--border-strong); }
+  .tagline {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* API BAR */
+  .api-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .api-bar label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .api-bar input {
+    flex: 1;
+    max-width: 380px;
+    background: var(--surface2);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .api-bar input:focus { border-color: var(--green); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  /* LAYOUT */
+  main {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    min-height: calc(100vh - 88px);
+  }
+
+  /* INPUT PANEL */
+  .panel-in {
+    border-right: 1px solid var(--border);
+    padding: 2rem;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .panel-heading {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .panel-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 0.25rem;
+    line-height: 1.5;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  input[type="text"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-family: var(--body);
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--green); }
+  textarea { min-height: 220px; line-height: 1.6; }
+  select option { background: var(--surface2); }
+
+  /* FORMAT TABS */
+  .format-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .fmt-tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .fmt-tab:hover { border-color: var(--green); color: var(--green); }
+  .fmt-tab.active { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+
+  .btn-run {
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 0.85rem 1.5rem;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: auto;
+  }
+  .btn-run:hover { opacity: 0.88; }
+  .btn-run:active { transform: scale(0.98); }
+  .btn-run:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 6px; height: 6px; background: #000; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT PANEL */
+  .panel-out {
+    padding: 2.5rem;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 65vh;
+    gap: 1rem;
+    text-align: center;
+  }
+  .empty-glyph {
+    font-family: var(--display);
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: var(--surface2);
+    line-height: 1;
+  }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.06em; max-width: 260px; }
+
+  /* RESULTS */
+  #results { display: none; }
+
+  .results-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 1rem;
+  }
+  .results-title { font-family: var(--display); font-weight: 800; font-size: 1.6rem; letter-spacing: -0.02em; line-height: 1.2; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.4rem; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0.45rem 1rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  /* SCORE CARDS */
+  .score-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .score-num { font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1; margin-bottom: 0.25rem; }
+  .score-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 1.75rem; }
+  .section-head {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* THEME PILLS */
+  .themes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .theme-pill {
+    font-size: 13px;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-family: var(--body);
+  }
+  .theme-went-well { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+  .theme-improve { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+  .theme-blocker { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+
+  /* ACTION ITEMS */
+  .action-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .action-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+  }
+  .action-text { font-size: 14px; line-height: 1.5; }
+  .action-owner {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--blue);
+    background: var(--blue-dim);
+    border: 1px solid var(--blue-border);
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    white-space: nowrap;
+  }
+  .action-priority {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .pri-high { color: var(--red); background: var(--red-dim); border-color: var(--red-border); }
+  .pri-med { color: var(--amber); background: var(--amber-dim); border-color: var(--amber-border); }
+  .pri-low { color: var(--green); background: var(--green-dim); border-color: var(--green-border); }
+
+  /* SUMMARY */
+  .summary-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #c8c5c0;
+  }
+
+  /* HEALTH BAR */
+  .health-bar-wrap { margin-bottom: 1.5rem; }
+  .health-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 0.4rem; }
+  .health-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .health-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  .bottom-actions { display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 1px solid var(--border); }
+    .score-row { grid-template-columns: repeat(2, 1fr); }
+    .action-item { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<div class="topbar">
+  <div class="logo">retro<em>.</em>lens</div>
+  <div class="sep"></div>
+  <div class="tagline">sprint retrospective analyzer // pm-toolkit #02</div>
+</div>
+
+<main>
+  <!-- INPUT -->
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Paste your retro notes</div>
+      <div class="panel-sub">Raw notes, bullets, sticky note dumps — any format works. The AI will structure and analyze them.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Team name</div>
+      <input type="text" id="team-name" placeholder="e.g. Growth squad" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Sprint number or date</div>
+      <input type="text" id="sprint-id" placeholder="e.g. Sprint 24 / April 2026" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Retro format used</div>
+      <div class="format-tabs" id="format-tabs">
+        <button class="fmt-tab active" onclick="setFormat(this, 'Start / Stop / Continue')">Start Stop Continue</button>
+        <button class="fmt-tab" onclick="setFormat(this, 'What went well / What to improve / Action items')">Went Well / Improve</button>
+        <button class="fmt-tab" onclick="setFormat(this, '4Ls: Liked / Learned / Lacked / Longed for')">4Ls</button>
+        <button class="fmt-tab" onclick="setFormat(this, 'Mad / Sad / Glad')">Mad Sad Glad</button>
+        <button class="fmt-tab" onclick="setFormat(this, 'Open / freeform notes')">Freeform</button>
+      </div>
+      <input type="hidden" id="retro-format" value="Start / Stop / Continue" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Retro notes</div>
+      <textarea id="notes" placeholder="Paste your raw retro notes here...
+
+Example:
+- Standup has been too long, running 20+ mins
+- Deployment on Tuesday went smoothly
+- Still unclear on who owns QA sign-off
+- Would love more async updates before sync meetings
+- PR review cycle is slow, blocking merges
+- Team morale feels good this sprint"></textarea>
+    </div>
+
+    <button class="btn-run" id="run-btn" onclick="analyzeRetro()">
+      <span id="btn-text">Analyze retro →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <!-- OUTPUT -->
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">↺</div>
+      <p>Paste retro notes on the left and run the analysis.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-header">
+        <div>
+          <div class="results-title" id="out-title">Sprint Retrospective</div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+        <button class="btn-ghost" onclick="resetAll()">New retro</button>
+      </div>
+
+      <!-- SCORE ROW -->
+      <div class="score-row" id="score-row"></div>
+
+      <!-- HEALTH BARS -->
+      <div class="section">
+        <div class="section-head">Team health indicators</div>
+        <div id="health-bars"></div>
+      </div>
+
+      <!-- THEMES -->
+      <div class="section">
+        <div class="section-head">What went well</div>
+        <div class="themes" id="themes-well"></div>
+      </div>
+      <div class="section">
+        <div class="section-head">Areas to improve</div>
+        <div class="themes" id="themes-improve"></div>
+      </div>
+      <div class="section">
+        <div class="section-head">Blockers surfaced</div>
+        <div class="themes" id="themes-blockers"></div>
+      </div>
+
+      <!-- ACTION ITEMS -->
+      <div class="section">
+        <div class="section-head">Action items</div>
+        <div class="action-list" id="action-list"></div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="section">
+        <div class="section-head">PM summary</div>
+        <div class="summary-box" id="summary"></div>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="copyResults()">Copy as text</button>
+        <button class="btn-ghost" onclick="resetAll()">New retro</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+let activeFormat = 'Start / Stop / Continue';
+
+function setFormat(btn, val) {
+  document.querySelectorAll('.fmt-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFormat = val;
+}
+
+async function analyzeRetro() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const team = document.getElementById('team-name').value.trim();
+  const sprint = document.getElementById('sprint-id').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!notes) { alert('Please paste your retro notes.'); return; }
+
+  const btn = document.getElementById('run-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are an experienced Agile coach and product manager analyzing a sprint retrospective.
+
+Team: ${team || 'Unknown team'}
+Sprint: ${sprint || 'Unknown sprint'}
+Retro format used: ${activeFormat}
+
+Raw retro notes:
+${notes}
+
+Analyze these notes and return ONLY valid JSON with no markdown, no backticks, no preamble.
+
+{
+  "scores": {
+    "velocity_health": 72,
+    "team_morale": 85,
+    "process_health": 60,
+    "risk_level": 40
+  },
+  "health_indicators": [
+    { "label": "Communication", "score": 75 },
+    { "label": "Delivery confidence", "score": 60 },
+    { "label": "Psychological safety", "score": 80 },
+    { "label": "Technical health", "score": 55 }
+  ],
+  "went_well": ["theme 1", "theme 2", "theme 3"],
+  "improve": ["theme 1", "theme 2", "theme 3"],
+  "blockers": ["blocker 1", "blocker 2"],
+  "action_items": [
+    { "action": "Specific action to take", "owner": "Role or person", "priority": "High" },
+    { "action": "Specific action to take", "owner": "Role or person", "priority": "Medium" },
+    { "action": "Specific action to take", "owner": "Role or person", "priority": "Low" }
+  ],
+  "summary": "2-3 sentence PM-level summary of the sprint health, the most critical issue to address, and the overall trajectory of the team."
+}
+
+Score rules:
+- velocity_health: 0-100, how well the team is shipping
+- team_morale: 0-100, sentiment and energy level
+- process_health: 0-100, how well the team's workflows are functioning
+- risk_level: 0-100, how much risk the team is carrying (higher = more risk)
+- All health_indicators scored 0-100
+- action priority must be exactly "High", "Medium", or "Low"
+Base all scores on the actual content of the notes provided.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, team, sprint);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, team, sprint) {
+  document.getElementById('out-title').textContent = (team || 'Team') + ' Retrospective';
+  document.getElementById('out-meta').textContent = (sprint || '') + ' · ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' · ' + activeFormat;
+
+  // Score cards
+  const scores = [
+    { label: 'Velocity health', val: r.scores.velocity_health, color: scoreColor(r.scores.velocity_health) },
+    { label: 'Team morale', val: r.scores.team_morale, color: scoreColor(r.scores.team_morale) },
+    { label: 'Process health', val: r.scores.process_health, color: scoreColor(r.scores.process_health) },
+    { label: 'Risk level', val: r.scores.risk_level, color: riskColor(r.scores.risk_level) },
+  ];
+  document.getElementById('score-row').innerHTML = scores.map(s => `
+    <div class="score-card">
+      <div class="score-num" style="color:${s.color}">${s.val}</div>
+      <div class="score-label">${s.label}</div>
+    </div>`).join('');
+
+  // Health bars
+  document.getElementById('health-bars').innerHTML = r.health_indicators.map(h => `
+    <div class="health-bar-wrap">
+      <div class="health-label"><span>${h.label}</span><span style="color:${scoreColor(h.score)}">${h.score}/100</span></div>
+      <div class="health-track"><div class="health-fill" style="width:${h.score}%;background:${scoreColor(h.score)}"></div></div>
+    </div>`).join('');
+
+  // Themes
+  document.getElementById('themes-well').innerHTML = r.went_well.map(t => `<span class="theme-pill theme-went-well">${t}</span>`).join('');
+  document.getElementById('themes-improve').innerHTML = r.improve.map(t => `<span class="theme-pill theme-improve">${t}</span>`).join('');
+  document.getElementById('themes-blockers').innerHTML = r.blockers.length
+    ? r.blockers.map(t => `<span class="theme-pill theme-blocker">${t}</span>`).join('')
+    : `<span style="font-family:var(--mono);font-size:12px;color:var(--dim)">No blockers identified</span>`;
+
+  // Action items
+  document.getElementById('action-list').innerHTML = r.action_items.map(a => `
+    <div class="action-item">
+      <div class="action-text">${a.action}</div>
+      <div class="action-owner">${a.owner}</div>
+      <div class="action-priority ${a.priority === 'High' ? 'pri-high' : a.priority === 'Medium' ? 'pri-med' : 'pri-low'}">${a.priority}</div>
+    </div>`).join('');
+
+  // Summary
+  document.getElementById('summary').textContent = r.summary;
+
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function scoreColor(val) {
+  if (val >= 70) return 'var(--green)';
+  if (val >= 45) return 'var(--amber)';
+  return 'var(--red)';
+}
+function riskColor(val) {
+  if (val >= 70) return 'var(--red)';
+  if (val >= 45) return 'var(--amber)';
+  return 'var(--green)';
+}
+
+function copyResults() {
+  const title = document.getElementById('out-title').textContent;
+  const meta = document.getElementById('out-meta').textContent;
+  const summary = document.getElementById('summary').textContent;
+  const actions = Array.from(document.querySelectorAll('.action-item')).map(el => {
+    const text = el.querySelector('.action-text').textContent;
+    const owner = el.querySelector('.action-owner').textContent;
+    const pri = el.querySelector('.action-priority').textContent;
+    return `[${pri}] ${text} — ${owner}`;
+  }).join('\n');
+  navigator.clipboard.writeText(`${title}\n${meta}\n\nSummary:\n${summary}\n\nAction Items:\n${actions}`).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+  });
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
