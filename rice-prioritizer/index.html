@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature Prioritization — RICE Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6c7591;
+    --dim: #2e3550;
+    --violet: #7c6af7;
+    --violet-light: rgba(124,106,247,0.12);
+    --violet-border: rgba(124,106,247,0.3);
+    --cyan: #22d3ee;
+    --cyan-light: rgba(34,211,238,0.1);
+    --cyan-border: rgba(34,211,238,0.25);
+    --green: #4ade80;
+    --green-light: rgba(74,222,128,0.1);
+    --green-border: rgba(74,222,128,0.25);
+    --amber: #fbbf24;
+    --amber-light: rgba(251,191,36,0.1);
+    --amber-border: rgba(251,191,36,0.25);
+    --red: #f87171;
+    --red-light: rgba(248,113,113,0.1);
+    --display: 'Fraunces', Georgia, serif;
+    --sans: 'Manrope', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  .api-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .api-bar label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 380px; background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.35rem 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .api-bar input:focus { border-color: var(--violet); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  header { border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: baseline; gap: 1rem; background: var(--bg); position: sticky; top: 0; z-index: 20; }
+  .logo { font-family: var(--display); font-size: 1.2rem; font-weight: 700; color: var(--text); }
+  .logo em { color: var(--violet); font-style: italic; }
+  .tagline { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; border-left: 1px solid var(--border-strong); padding-left: 1rem; }
+
+  main { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 90px); }
+
+  .panel-in { border-right: 1px solid var(--border); background: var(--surface); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+
+  .panel-heading { font-family: var(--display); font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* RICE EXPLAINER */
+  .rice-explainer { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .rice-item { display: flex; flex-direction: column; gap: 1px; }
+  .rice-letter { font-family: var(--mono); font-size: 11px; color: var(--violet); font-weight: 500; }
+  .rice-def { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  input[type="text"], textarea, select {
+    background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 0.6rem 0.85rem; font-family: var(--sans); font-size: 14px;
+    color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--violet); }
+  textarea { min-height: 200px; line-height: 1.65; }
+  select option { background: var(--surface2); }
+
+  .btn-score {
+    background: var(--violet); color: #fff; border: none; border-radius: 6px;
+    padding: 0.85rem; font-family: var(--sans); font-weight: 600; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: opacity 0.15s, transform 0.1s; margin-top: auto;
+  }
+  .btn-score:hover { opacity: 0.88; }
+  .btn-score:active { transform: scale(0.98); }
+  .btn-score:disabled { background: var(--dim); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 5px; height: 5px; background: #fff; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT */
+  .panel-out { padding: 2.5rem; overflow-y: auto; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; gap: 1rem; text-align: center; }
+  .empty-glyph { font-family: var(--display); font-size: 5rem; font-weight: 700; color: var(--surface2); line-height: 1; font-style: italic; }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.05em; max-width: 280px; line-height: 1.7; }
+
+  #results { display: none; }
+
+  .results-top { margin-bottom: 2rem; display: flex; align-items: flex-start; justify-content: space-between; }
+  .results-title { font-family: var(--display); font-size: 1.6rem; font-weight: 700; font-style: italic; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.3rem; }
+
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.45rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  /* RICE TABLE */
+  .rice-table-wrap { overflow-x: auto; margin-bottom: 2rem; }
+  .rice-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rice-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border-strong); white-space: nowrap; }
+  .rice-table th.right { text-align: right; }
+  .rice-table td { padding: 0.85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .rice-table tr:last-child td { border-bottom: none; }
+  .rice-table tr:hover td { background: var(--surface); }
+
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-family: var(--mono); font-size: 11px; font-weight: 500; }
+  .rank-1 { background: var(--violet-light); color: var(--violet); border: 1px solid var(--violet-border); }
+  .rank-2 { background: var(--cyan-light); color: var(--cyan); border: 1px solid var(--cyan-border); }
+  .rank-3 { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .rank-other { background: var(--surface2); color: var(--muted); border: 1px solid var(--border-strong); }
+
+  .feature-name { font-weight: 600; font-size: 14px; margin-bottom: 0.2rem; }
+  .feature-rationale { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .score-cell { text-align: right; font-family: var(--mono); font-size: 13px; }
+  .score-reach { color: var(--cyan); }
+  .score-impact { color: var(--green); }
+  .score-conf { color: var(--amber); }
+  .score-effort { color: var(--red); }
+
+  .rice-score { font-family: var(--mono); font-size: 15px; font-weight: 500; text-align: right; }
+
+  /* SCORE BAR */
+  .score-bar-wrap { margin-top: 0.35rem; }
+  .score-bar-track { height: 3px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 2px; background: var(--violet); }
+
+  /* RECOMMENDATION */
+  .section-head { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+  .rec-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; font-size: 14px; line-height: 1.8; color: var(--text); border-left: 3px solid var(--violet); margin-bottom: 2rem; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .bottom-actions { display: flex; gap: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<header>
+  <div class="logo"><em>rice</em> prioritizer</div>
+  <div class="tagline">feature prioritization assistant // pm-toolkit #05</div>
+</header>
+
+<main>
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Score your backlog</div>
+      <div class="panel-sub">List your features and the AI scores each one using the RICE framework, then ranks them.</div>
+    </div>
+
+    <div class="rice-explainer">
+      <div class="rice-item"><div class="rice-letter">R — Reach</div><div class="rice-def">How many users impacted per quarter</div></div>
+      <div class="rice-item"><div class="rice-letter">I — Impact</div><div class="rice-def">Effect on the goal (0.25–3×)</div></div>
+      <div class="rice-item"><div class="rice-letter">C — Confidence</div><div class="rice-def">How sure are we (50–100%)</div></div>
+      <div class="rice-item"><div class="rice-letter">E — Effort</div><div class="rice-def">Person-months to ship</div></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Product / team context</div>
+      <input type="text" id="context" placeholder="e.g. B2B SaaS, 50k MAU, growth-focused team" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Strategic goal this quarter</div>
+      <input type="text" id="goal" placeholder="e.g. Reduce churn, increase activation rate" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Feature backlog</div>
+      <textarea id="features" placeholder="List your features, one per line. Add brief context if you have it.
+
+Example:
+- In-app onboarding checklist
+- SSO / SAML integration
+- Dark mode
+- CSV export for reports
+- Mobile push notifications
+- Bulk user management
+- AI-powered search"></textarea>
+    </div>
+
+    <button class="btn-score" id="score-btn" onclick="scoreFeatures()">
+      <span id="btn-text">Score & rank features →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">№</div>
+      <p>Paste your feature backlog and get a RICE-scored priority ranking.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-top">
+        <div>
+          <div class="results-title">Prioritized backlog</div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+        <button class="btn-ghost" onclick="resetAll()">New backlog</button>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Reach</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Impact</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Confidence</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Effort</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--violet)"></div>RICE score</div>
+      </div>
+
+      <div class="rice-table-wrap">
+        <table class="rice-table">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>Feature</th>
+              <th class="right">Reach</th>
+              <th class="right">Impact</th>
+              <th class="right">Conf %</th>
+              <th class="right">Effort</th>
+              <th class="right">RICE</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="section-head">PM recommendation</div>
+      <div class="rec-box" id="rec-box"></div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="copyResults()">Copy as text</button>
+        <button class="btn-ghost" onclick="resetAll()">New backlog</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+async function scoreFeatures() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const context = document.getElementById('context').value.trim();
+  const goal = document.getElementById('goal').value.trim();
+  const features = document.getElementById('features').value.trim();
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!features) { alert('Please enter at least one feature.'); return; }
+
+  const btn = document.getElementById('score-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are a senior product manager applying RICE scoring to a feature backlog.
+
+Product context: ${context || 'B2B SaaS product'}
+Strategic goal: ${goal || 'General product growth'}
+
+Feature backlog:
+${features}
+
+Score each feature using RICE and return ONLY valid JSON, no markdown, no backticks.
+
+RICE formula: (Reach × Impact × Confidence) / Effort
+- Reach: estimated users impacted per quarter (integer, e.g. 500, 2000, 10000)
+- Impact: 0.25 (minimal), 0.5 (low), 1 (medium), 2 (high), 3 (massive)
+- Confidence: percentage as integer (50, 75, 80, 100)
+- Effort: person-months as decimal (0.5, 1, 2, 3, 5)
+- rice_score: calculate as Math.round((reach * impact * confidence) / effort)
+
+Return features sorted by rice_score descending.
+
+{
+  "features": [
+    {
+      "name": "Feature name",
+      "reach": 2000,
+      "impact": 2,
+      "confidence": 80,
+      "effort": 1,
+      "rice_score": 3200,
+      "rationale": "One sentence explaining the RICE scores and why this feature ranked here"
+    }
+  ],
+  "recommendation": "2-3 sentence PM recommendation. Which features to ship first, which to defer, and why. Reference the strategic goal."
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, context, goal);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, context, goal) {
+  const features = r.features;
+  const maxScore = Math.max(...features.map(f => f.rice_score));
+
+  document.getElementById('out-meta').textContent =
+    `${features.length} features scored · ${context || 'General context'} · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+  document.getElementById('table-body').innerHTML = features.map((f, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+    const barWidth = Math.round((f.rice_score / maxScore) * 100);
+    return `
+      <tr>
+        <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+        <td>
+          <div class="feature-name">${f.name}</div>
+          <div class="feature-rationale">${f.rationale}</div>
+          <div class="score-bar-wrap">
+            <div class="score-bar-track"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
+          </div>
+        </td>
+        <td class="score-cell score-reach">${f.reach.toLocaleString()}</td>
+        <td class="score-cell score-impact">${f.impact}×</td>
+        <td class="score-cell score-conf">${f.confidence}%</td>
+        <td class="score-cell score-effort">${f.effort}mo</td>
+        <td class="rice-score">${f.rice_score.toLocaleString()}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('rec-box').textContent = r.recommendation;
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function copyResults() {
+  const rows = Array.from(document.querySelectorAll('#table-body tr')).map((row, i) => {
+    const cells = row.querySelectorAll('td');
+    return `${i + 1}. ${cells[1].querySelector('.feature-name').textContent} — RICE: ${cells[6].textContent}`;
+  }).join('\n');
+  const rec = document.getElementById('rec-box').textContent;
+  navigator.clipboard.writeText(`Prioritized Backlog\n\n${rows}\n\nRecommendation:\n${rec}`).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+  });
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
