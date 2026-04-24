@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stakeholder Update Writer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f8fc;
+    --surface: #ffffff;
+    --surface2: #f0f2f8;
+    --border: #e4e7f0;
+    --border-strong: #cdd1e0;
+    --ink: #111827;
+    --muted: #6b7280;
+    --dim: #d1d5db;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --blue-border: #bfdbfe;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --green-border: #a7f3d0;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --amber-border: #fcd34d;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --red-border: #fecaca;
+    --display: 'Space Grotesk', sans-serif;
+    --sans: 'Inter', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  .api-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .api-bar label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 380px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.35rem 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .api-bar input:focus { border-color: var(--blue); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  header { border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; background: var(--surface); position: sticky; top: 0; z-index: 20; }
+  .logo { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+  .logo span { color: var(--blue); }
+  .tagline { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; border-left: 1px solid var(--border-strong); padding-left: 1rem; }
+
+  main { display: grid; grid-template-columns: 400px 1fr; min-height: calc(100vh - 90px); }
+
+  .panel-in { border-right: 1px solid var(--border); background: var(--surface); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+
+  .panel-heading { font-family: var(--display); font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  input[type="text"], textarea, select {
+    background: var(--bg); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 0.6rem 0.85rem; font-family: var(--sans); font-size: 14px;
+    color: var(--ink); width: 100%; outline: none; transition: border-color 0.15s; resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--blue); }
+  textarea { min-height: 80px; line-height: 1.6; }
+
+  /* STATUS SELECTOR */
+  .status-row { display: flex; gap: 0.5rem; }
+  .status-btn {
+    flex: 1; padding: 0.5rem 0.25rem; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--bg); font-family: var(--mono); font-size: 11px; cursor: pointer;
+    transition: all 0.15s; text-align: center; color: var(--muted);
+  }
+  .status-btn:hover { border-color: var(--border-strong); color: var(--ink); }
+  .status-btn.on-track.active { background: var(--green-light); border-color: var(--green-border); color: var(--green); }
+  .status-btn.at-risk.active { background: var(--amber-light); border-color: var(--amber-border); color: var(--amber); }
+  .status-btn.off-track.active { background: var(--red-light); border-color: var(--red-border); color: var(--red); }
+
+  /* FORMAT TABS */
+  .fmt-row { display: flex; gap: 0.5rem; }
+  .fmt-btn {
+    flex: 1; padding: 0.55rem 0.25rem; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--bg); font-family: var(--mono); font-size: 11px; cursor: pointer;
+    transition: all 0.15s; text-align: center; color: var(--muted);
+  }
+  .fmt-btn:hover { border-color: var(--blue-border); color: var(--blue); }
+  .fmt-btn.active { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue); }
+
+  /* TONE */
+  .tone-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .tone-btn {
+    padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid var(--border-strong);
+    background: transparent; font-family: var(--mono); font-size: 11px; cursor: pointer;
+    transition: all 0.15s; color: var(--muted);
+  }
+  .tone-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .tone-btn.active { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue); }
+
+  .btn-generate {
+    background: var(--blue); color: #fff; border: none; border-radius: 6px;
+    padding: 0.85rem; font-family: var(--display); font-weight: 600; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: opacity 0.15s, transform 0.1s; margin-top: auto;
+  }
+  .btn-generate:hover { opacity: 0.88; }
+  .btn-generate:active { transform: scale(0.98); }
+  .btn-generate:disabled { background: var(--dim); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 5px; height: 5px; background: #fff; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT */
+  .panel-out { padding: 2.5rem; overflow-y: auto; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; gap: 1rem; text-align: center; }
+  .empty-icon { font-size: 3.5rem; line-height: 1; }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.05em; max-width: 260px; line-height: 1.7; }
+
+  #results { display: none; }
+
+  .results-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.75rem; gap: 1rem; }
+  .results-title { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.2; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.3rem; }
+
+  /* FORMAT OUTPUT TABS */
+  .out-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.75rem; }
+  .out-tab {
+    font-family: var(--mono); font-size: 11px; padding: 0.6rem 1.25rem; border: none;
+    background: transparent; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s; letter-spacing: 0.03em;
+  }
+  .out-tab:hover { color: var(--ink); }
+  .out-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* MESSAGE DISPLAY */
+  .message-wrap { display: none; }
+  .message-wrap.active { display: block; }
+
+  .message-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+
+  /* EMAIL HEADER */
+  .email-header { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 1rem 1.25rem; }
+  .email-field { display: flex; align-items: baseline; gap: 0.5rem; font-size: 13px; margin-bottom: 0.3rem; }
+  .email-field:last-child { margin-bottom: 0; }
+  .email-field-label { font-family: var(--mono); font-size: 10px; color: var(--muted); width: 50px; flex-shrink: 0; }
+  .email-subject { font-weight: 600; color: var(--ink); }
+
+  /* SLACK HEADER */
+  .slack-header { background: #4a154b; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+  .slack-channel { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.8); }
+  .slack-dot { width: 8px; height: 8px; border-radius: 50%; background: #2eb67d; }
+
+  /* EXEC HEADER */
+  .exec-header { background: var(--ink); padding: 1rem 1.25rem; }
+  .exec-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+  .exec-title { font-family: var(--display); font-size: 1rem; font-weight: 600; color: #fff; }
+
+  .message-body { padding: 1.5rem; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: var(--ink); }
+  .slack-body { font-family: var(--sans); }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--mono); font-size: 11px; padding: 4px 12px; border-radius: 999px; border: 1px solid; margin-bottom: 1.25rem;
+  }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .badge-green { background: var(--green-light); border-color: var(--green-border); color: var(--green); }
+  .badge-green .badge-dot { background: var(--green); }
+  .badge-amber { background: var(--amber-light); border-color: var(--amber-border); color: var(--amber); }
+  .badge-amber .badge-dot { background: var(--amber); }
+  .badge-red { background: var(--red-light); border-color: var(--red-border); color: var(--red); }
+  .badge-red .badge-dot { background: var(--red); }
+
+  .copy-bar { display: flex; justify-content: flex-end; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); }
+  .btn-copy { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.4rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .btn-copy:hover { border-color: var(--blue); color: var(--blue); }
+
+  .bottom-actions { display: flex; gap: 0.75rem; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.5rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<header>
+  <div class="logo">update<span>.</span>draft</div>
+  <div class="tagline">stakeholder update writer // pm-toolkit #04</div>
+</header>
+
+<main>
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Project status</div>
+      <div class="panel-sub">Fill in the details and get a polished update in any format instantly.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Project name</div>
+      <input type="text" id="project-name" placeholder="e.g. Mobile app redesign" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Overall status</div>
+      <div class="status-row">
+        <button class="status-btn on-track active" onclick="setStatus(this, 'On Track')">✓ On Track</button>
+        <button class="status-btn at-risk" onclick="setStatus(this, 'At Risk')">⚠ At Risk</button>
+        <button class="status-btn off-track" onclick="setStatus(this, 'Off Track')">✕ Off Track</button>
+      </div>
+      <input type="hidden" id="status" value="On Track" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Reporting period</div>
+      <input type="text" id="period" placeholder="e.g. Week of April 21 / Q2 Week 3" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Accomplishments this period</div>
+      <textarea id="wins" placeholder="What got done? Ship milestones, decisions made, blockers cleared..."></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Blockers / risks</div>
+      <textarea id="blockers" placeholder="What's slowing things down or at risk?" style="min-height:65px;"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Next steps</div>
+      <textarea id="next" placeholder="What's happening next period? Key milestones coming up..." style="min-height:65px;"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Audience</div>
+      <input type="text" id="audience" placeholder="e.g. Engineering leads, VP of Product" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Output format</div>
+      <div class="fmt-row">
+        <button class="fmt-btn active" onclick="setFormat(this, 'email')">📧 Email</button>
+        <button class="fmt-btn" onclick="setFormat(this, 'slack')">💬 Slack</button>
+        <button class="fmt-btn" onclick="setFormat(this, 'exec')">📊 Exec summary</button>
+      </div>
+      <input type="hidden" id="format" value="email" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Tone</div>
+      <div class="tone-row">
+        <button class="tone-btn active" onclick="setTone(this, 'Confident and direct')">Confident</button>
+        <button class="tone-btn" onclick="setTone(this, 'Reassuring and measured')">Reassuring</button>
+        <button class="tone-btn" onclick="setTone(this, 'Urgent and action-oriented')">Urgent</button>
+        <button class="tone-btn" onclick="setTone(this, 'Formal and structured')">Formal</button>
+      </div>
+      <input type="hidden" id="tone" value="Confident and direct" />
+    </div>
+
+    <button class="btn-generate" id="gen-btn" onclick="generateUpdate()">
+      <span id="btn-text">Generate update →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">✉</div>
+      <p>Fill in your project status and generate a polished stakeholder update.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-top">
+        <div>
+          <div class="results-title" id="out-title"></div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+      </div>
+
+      <div class="out-tabs">
+        <button class="out-tab active" onclick="showOutput('email')">Email</button>
+        <button class="out-tab" onclick="showOutput('slack')">Slack</button>
+        <button class="out-tab" onclick="showOutput('exec')">Exec summary</button>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="message-wrap active" id="wrap-email">
+        <div class="message-card">
+          <div class="email-header">
+            <div class="email-field"><span class="email-field-label">To</span><span id="email-to"></span></div>
+            <div class="email-field"><span class="email-field-label">Subject</span><span class="email-subject" id="email-subject"></span></div>
+            <div class="email-field"><span class="email-field-label">From</span><span>Project PM</span></div>
+          </div>
+          <div class="message-body" id="email-body"></div>
+          <div class="copy-bar"><button class="btn-copy" onclick="copyOutput('email-body')">Copy</button></div>
+        </div>
+      </div>
+
+      <!-- SLACK -->
+      <div class="message-wrap" id="wrap-slack">
+        <div class="message-card">
+          <div class="slack-header">
+            <div class="slack-dot"></div>
+            <div class="slack-channel" id="slack-channel">#project-updates</div>
+          </div>
+          <div class="message-body slack-body" id="slack-body"></div>
+          <div class="copy-bar"><button class="btn-copy" onclick="copyOutput('slack-body')">Copy</button></div>
+        </div>
+      </div>
+
+      <!-- EXEC -->
+      <div class="message-wrap" id="wrap-exec">
+        <div class="message-card">
+          <div class="exec-header">
+            <div class="exec-label">EXECUTIVE SUMMARY</div>
+            <div class="exec-title" id="exec-title"></div>
+          </div>
+          <div class="message-body" id="exec-body"></div>
+          <div class="copy-bar"><button class="btn-copy" onclick="copyOutput('exec-body')">Copy</button></div>
+        </div>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="resetAll()">New update</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+let currentStatus = 'On Track';
+let currentFormat = 'email';
+let currentTone = 'Confident and direct';
+
+function setStatus(btn, val) {
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentStatus = val;
+  document.getElementById('status').value = val;
+}
+
+function setFormat(btn, val) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFormat = val;
+  document.getElementById('format').value = val;
+}
+
+function setTone(btn, val) {
+  document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTone = val;
+  document.getElementById('tone').value = val;
+}
+
+function showOutput(fmt) {
+  document.querySelectorAll('.message-wrap').forEach(w => w.classList.remove('active'));
+  document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('wrap-' + fmt).classList.add('active');
+  document.querySelectorAll('.out-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(fmt === 'exec' ? 'exec' : fmt)) t.classList.add('active');
+  });
+}
+
+async function generateUpdate() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const project = document.getElementById('project-name').value.trim();
+  const period = document.getElementById('period').value.trim();
+  const wins = document.getElementById('wins').value.trim();
+  const blockers = document.getElementById('blockers').value.trim();
+  const next = document.getElementById('next').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!project || !wins) { alert('Please fill in at least the project name and accomplishments.'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are a senior product manager writing stakeholder updates. Generate all three formats at once.
+
+Project: ${project}
+Status: ${currentStatus}
+Period: ${period || 'This week'}
+Audience: ${audience || 'Stakeholders'}
+Tone: ${currentTone}
+
+Accomplishments:
+${wins}
+
+Blockers / Risks:
+${blockers || 'None to report'}
+
+Next steps:
+${next || 'TBD'}
+
+Return ONLY valid JSON, no markdown, no backticks, no preamble.
+
+{
+  "email": {
+    "to": "${audience || 'Stakeholders'}",
+    "subject": "Email subject line",
+    "body": "Full email body. Professional, ${currentTone} tone. Include a status line at the top, accomplishments, blockers if any, and next steps. Sign off as PM."
+  },
+  "slack": {
+    "channel": "#project-updates",
+    "body": "Slack message. Use emoji sparingly, be concise, use line breaks for readability. Slack-native formatting with *bold* for headers. No lengthy paragraphs."
+  },
+  "exec": {
+    "title": "${project} — ${period || 'Status Update'}",
+    "body": "Executive summary. 3-4 sentences max. Lead with status, one key win, one risk if applicable, one clear ask or next step. Written for a VP or C-suite reader with no time to read details."
+  }
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, project, period);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, project, period) {
+  document.getElementById('out-title').textContent = project;
+  document.getElementById('out-meta').textContent = (period || 'This period') + ' · ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' · ' + currentStatus;
+
+  // Email
+  document.getElementById('email-to').textContent = r.email.to;
+  document.getElementById('email-subject').textContent = r.email.subject;
+  document.getElementById('email-body').textContent = r.email.body;
+
+  // Slack
+  document.getElementById('slack-channel').textContent = r.slack.channel;
+  document.getElementById('slack-body').textContent = r.slack.body;
+
+  // Exec
+  document.getElementById('exec-title').textContent = r.exec.title;
+  document.getElementById('exec-body').textContent = r.exec.body;
+
+  // Show the format that was selected
+  showOutput(currentFormat);
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function copyOutput(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
