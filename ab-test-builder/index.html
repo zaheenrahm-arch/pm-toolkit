@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A/B Test Hypothesis Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #08090c;
+    --surface: #0f1117;
+    --surface2: #161820;
+    --surface3: #1d2030;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.11);
+    --text: #e4e6f0;
+    --muted: #636878;
+    --dim: #2a2d3a;
+    --lime: #a8e44a;
+    --lime-dim: rgba(168,228,74,0.1);
+    --lime-border: rgba(168,228,74,0.25);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56,189,248,0.1);
+    --sky-border: rgba(56,189,248,0.25);
+    --purple: #c084fc;
+    --purple-dim: rgba(192,132,252,0.1);
+    --purple-border: rgba(192,132,252,0.25);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --amber-border: rgba(251,191,36,0.25);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --red-border: rgba(248,113,113,0.25);
+    --display: 'Space Grotesk', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  html, body { background: var(--bg); color: var(--text); font-family: var(--display); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  .api-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .api-bar label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 380px; background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.35rem 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .api-bar input:focus { border-color: var(--lime); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  header { border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: baseline; gap: 1rem; background: var(--bg); position: sticky; top: 0; z-index: 20; }
+  .logo { font-family: var(--display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
+  .logo span { color: var(--lime); }
+  .tagline { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; border-left: 1px solid var(--border-strong); padding-left: 1rem; }
+
+  main { display: grid; grid-template-columns: 400px 1fr; min-height: calc(100vh - 90px); }
+
+  .panel-in { border-right: 1px solid var(--border); background: var(--surface); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+  .panel-heading { font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); line-height: 1.5; font-weight: 400; }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  input[type="text"], input[type="number"], textarea, select {
+    background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 0.6rem 0.85rem; font-family: var(--display); font-size: 14px;
+    color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; resize: vertical;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus { border-color: var(--lime); }
+  textarea { min-height: 80px; line-height: 1.6; }
+  select option { background: var(--surface2); }
+
+  .field-row { display: flex; gap: 0.75rem; }
+  .field-row .field { flex: 1; }
+
+  /* TEST TYPE */
+  .type-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .type-btn {
+    padding: 0.4rem 0.85rem; border-radius: 999px; border: 1px solid var(--border-strong);
+    background: transparent; font-family: var(--mono); font-size: 10px; cursor: pointer;
+    transition: all 0.15s; color: var(--muted); letter-spacing: 0.03em;
+  }
+  .type-btn:hover { border-color: var(--lime); color: var(--lime); }
+  .type-btn.active { background: var(--lime-dim); border-color: var(--lime-border); color: var(--lime); }
+
+  .btn-build {
+    background: var(--lime); color: #000; border: none; border-radius: 6px;
+    padding: 0.85rem; font-family: var(--display); font-weight: 700; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: opacity 0.15s, transform 0.1s; margin-top: auto;
+  }
+  .btn-build:hover { opacity: 0.88; }
+  .btn-build:active { transform: scale(0.98); }
+  .btn-build:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 5px; height: 5px; background: #000; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT */
+  .panel-out { padding: 2.5rem; overflow-y: auto; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; gap: 1rem; text-align: center; }
+  .empty-glyph { font-family: var(--mono); font-size: 3.5rem; font-weight: 700; color: var(--surface3); line-height: 1; }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.05em; max-width: 280px; line-height: 1.7; }
+
+  #results { display: none; }
+
+  .results-top { margin-bottom: 2rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .results-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.35rem; }
+
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.45rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  .section { margin-bottom: 2rem; }
+  .section-head { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+
+  /* HYPOTHESIS STATEMENT */
+  .hypothesis-card {
+    background: var(--surface); border: 1px solid var(--lime-border); border-radius: 8px;
+    padding: 1.5rem; margin-bottom: 2rem; border-left: 3px solid var(--lime);
+  }
+  .hypothesis-label { font-family: var(--mono); font-size: 10px; color: var(--lime); letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+  .hypothesis-text { font-size: 16px; font-weight: 500; line-height: 1.65; letter-spacing: -0.01em; }
+
+  /* VARIANTS */
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  .variant-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; }
+  .variant-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .variant-badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 4px; border: 1px solid; }
+  .control-badge { color: var(--sky); background: var(--sky-dim); border-color: var(--sky-border); }
+  .test-badge { color: var(--lime); background: var(--lime-dim); border-color: var(--lime-border); }
+  .variant-name { font-size: 14px; font-weight: 600; }
+  .variant-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* METRICS */
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.85rem 1rem; }
+  .metric-type { font-family: var(--mono); font-size: 10px; margin-bottom: 0.3rem; letter-spacing: 0.05em; }
+  .primary-type { color: var(--lime); }
+  .secondary-type { color: var(--muted); }
+  .metric-name { font-size: 14px; font-weight: 600; margin-bottom: 0.2rem; }
+  .metric-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* SAMPLE SIZE */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.85rem 1rem; text-align: center; }
+  .stat-num { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; color: var(--lime); }
+  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; }
+  .stat-note { font-size: 12px; color: var(--muted); margin-top: 0.25rem; }
+
+  /* RISKS */
+  .risk-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .risk-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .risk-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .risk-high { background: var(--red); }
+  .risk-med { background: var(--amber); }
+  .risk-low { background: var(--lime); }
+  .risk-text { font-size: 13px; line-height: 1.55; font-weight: 400; }
+
+  /* CHECKLIST */
+  .checklist { display: flex; flex-direction: column; gap: 0.5rem; }
+  .check-item { display: flex; gap: 0.75rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.65rem 0.85rem; }
+  .check-box { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 3px; flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .check-box:hover { border-color: var(--lime); }
+  .check-box.checked { background: var(--lime); border-color: var(--lime); }
+  .check-box.checked::after { content: '✓'; font-size: 10px; color: #000; font-weight: 700; }
+  .check-text { font-size: 13px; line-height: 1.55; }
+
+  .bottom-actions { display: flex; gap: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 1px solid var(--border); }
+    .variant-grid, .metrics-grid, .stats-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<header>
+  <div class="logo">A/B<span>.</span>build</div>
+  <div class="tagline">a/b test hypothesis builder // pm-toolkit #08</div>
+</header>
+
+<main>
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Build your experiment</div>
+      <div class="panel-sub">Describe the problem and your proposed change. Get a full experiment spec with hypothesis, metrics, and sample size.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Product / feature area</div>
+      <input type="text" id="product" placeholder="e.g. Checkout flow, onboarding, pricing page" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Problem or observation</div>
+      <textarea id="problem" placeholder="What behavior or metric prompted this test? What are you seeing that you want to improve?
+
+e.g. 42% of users drop off at the payment step. We believe the form is too long."></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Proposed change</div>
+      <textarea id="change" placeholder="What are you changing and why do you think it will help?
+
+e.g. Reduce the payment form from 8 fields to 4 by auto-filling address via postcode lookup." style="min-height:65px;"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Test type</div>
+      <div class="type-row">
+        <button class="type-btn active" onclick="setType(this, 'A/B test')">A/B Test</button>
+        <button class="type-btn" onclick="setType(this, 'Multivariate test')">Multivariate</button>
+        <button class="type-btn" onclick="setType(this, 'Split URL test')">Split URL</button>
+        <button class="type-btn" onclick="setType(this, 'Feature flag rollout')">Feature flag</button>
+      </div>
+      <input type="hidden" id="test-type" value="A/B test" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <div class="field-label">Current conversion rate %</div>
+        <input type="number" id="baseline" placeholder="e.g. 12" min="0" max="100" step="0.1" />
+      </div>
+      <div class="field">
+        <div class="field-label">Min. detectable effect %</div>
+        <input type="number" id="mde" placeholder="e.g. 10" min="1" max="100" step="1" />
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Weekly traffic to this area</div>
+      <input type="text" id="traffic" placeholder="e.g. 5,000 sessions per week" />
+    </div>
+
+    <button class="btn-build" id="build-btn" onclick="buildHypothesis()">
+      <span id="btn-text">Build experiment →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">A | B</div>
+      <p>Describe your product problem and proposed change to generate a full experiment spec.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-top">
+        <div>
+          <div class="results-title" id="out-title"></div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+        <button class="btn-ghost" onclick="resetAll()">New experiment</button>
+      </div>
+
+      <div class="hypothesis-card">
+        <div class="hypothesis-label">HYPOTHESIS STATEMENT</div>
+        <div class="hypothesis-text" id="hypothesis-text"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Test variants</div>
+        <div class="variant-grid" id="variant-grid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Success metrics</div>
+        <div class="metrics-grid" id="metrics-grid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Sample size & duration estimate</div>
+        <div class="stats-row" id="stats-row"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Risks & confounders</div>
+        <div class="risk-list" id="risk-list"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Pre-launch checklist</div>
+        <div class="checklist" id="checklist"></div>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="copyResults()">Copy as text</button>
+        <button class="btn-ghost" onclick="resetAll()">New experiment</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+let currentType = 'A/B test';
+
+function setType(btn, val) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentType = val;
+  document.getElementById('test-type').value = val;
+}
+
+async function buildHypothesis() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const product = document.getElementById('product').value.trim();
+  const problem = document.getElementById('problem').value.trim();
+  const change = document.getElementById('change').value.trim();
+  const baseline = document.getElementById('baseline').value.trim();
+  const mde = document.getElementById('mde').value.trim();
+  const traffic = document.getElementById('traffic').value.trim();
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!problem || !change) { alert('Please describe the problem and the proposed change.'); return; }
+
+  const btn = document.getElementById('build-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are a senior product manager and experimentation specialist building an A/B test spec.
+
+Product / feature area: ${product || 'Not specified'}
+Test type: ${currentType}
+Problem / observation: ${problem}
+Proposed change: ${change}
+Current conversion rate: ${baseline ? baseline + '%' : 'Not provided'}
+Minimum detectable effect: ${mde ? mde + '%' : 'Not provided'}
+Weekly traffic: ${traffic || 'Not provided'}
+
+Build a complete experiment spec and return ONLY valid JSON, no markdown, no backticks.
+
+{
+  "hypothesis": "If we [change], then [metric] will [direction] by [estimate], because [reasoning]. Written as one clear sentence in this format.",
+  "variants": [
+    { "name": "Control", "type": "control", "description": "Current state — what users see today" },
+    { "name": "Variant A", "type": "test", "description": "The specific change being tested" }
+  ],
+  "metrics": [
+    { "name": "Primary metric name", "type": "Primary", "description": "What it measures and why it's the north star for this test" },
+    { "name": "Secondary metric name", "type": "Secondary", "description": "Supporting metric to watch" },
+    { "name": "Guardrail metric name", "type": "Secondary", "description": "Metric that must not degrade" }
+  ],
+  "sample_size": {
+    "per_variant": "Estimated users needed per variant (number or range)",
+    "total": "Total users needed across all variants",
+    "duration": "Estimated runtime e.g. '2-3 weeks at current traffic'"
+  },
+  "risks": [
+    { "risk": "Risk or confounder description", "severity": "High" },
+    { "risk": "Risk or confounder description", "severity": "Medium" },
+    { "risk": "Risk or confounder description", "severity": "Low" }
+  ],
+  "checklist": [
+    "Pre-launch checklist item 1",
+    "Pre-launch checklist item 2",
+    "Pre-launch checklist item 3",
+    "Pre-launch checklist item 4",
+    "Pre-launch checklist item 5"
+  ]
+}
+
+Rules:
+- Hypothesis must follow the If/then/because structure
+- Include exactly 3 metrics: one Primary, two Secondary (one of which is a guardrail)
+- Risks severity must be exactly High, Medium, or Low
+- Checklist items should be specific and actionable for a PM running this experiment
+- If baseline and MDE are provided, calculate sample size using standard power analysis (80% power, 95% confidence). Otherwise estimate based on context.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, product);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, product) {
+  document.getElementById('out-title').textContent = (product || 'Experiment') + ' test spec';
+  document.getElementById('out-meta').textContent = `${currentType} · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+  document.getElementById('hypothesis-text').textContent = r.hypothesis;
+
+  document.getElementById('variant-grid').innerHTML = r.variants.map(v => `
+    <div class="variant-card">
+      <div class="variant-header">
+        <span class="variant-badge ${v.type === 'control' ? 'control-badge' : 'test-badge'}">${v.type === 'control' ? 'CONTROL' : 'VARIANT'}</span>
+        <div class="variant-name">${v.name}</div>
+      </div>
+      <div class="variant-desc">${v.description}</div>
+    </div>`).join('');
+
+  document.getElementById('metrics-grid').innerHTML = r.metrics.map(m => `
+    <div class="metric-card">
+      <div class="metric-type ${m.type === 'Primary' ? 'primary-type' : 'secondary-type'}">${m.type.toUpperCase()} METRIC</div>
+      <div class="metric-name">${m.name}</div>
+      <div class="metric-desc">${m.description}</div>
+    </div>`).join('');
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num">${r.sample_size.per_variant}</div>
+      <div class="stat-label">PER VARIANT</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${r.sample_size.total}</div>
+      <div class="stat-label">TOTAL USERS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size:1rem">${r.sample_size.duration}</div>
+      <div class="stat-label">EST. DURATION</div>
+    </div>`;
+
+  document.getElementById('risk-list').innerHTML = r.risks.map(risk => `
+    <div class="risk-item">
+      <div class="risk-dot ${risk.severity === 'High' ? 'risk-high' : risk.severity === 'Medium' ? 'risk-med' : 'risk-low'}"></div>
+      <div class="risk-text"><strong>${risk.severity}:</strong> ${risk.risk}</div>
+    </div>`).join('');
+
+  document.getElementById('checklist').innerHTML = r.checklist.map(item => `
+    <div class="check-item">
+      <div class="check-box" onclick="toggleCheck(this)"></div>
+      <div class="check-text">${item}</div>
+    </div>`).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function toggleCheck(box) {
+  box.classList.toggle('checked');
+}
+
+function copyResults() {
+  const title = document.getElementById('out-title').textContent;
+  const hypothesis = document.getElementById('hypothesis-text').textContent;
+  const risks = Array.from(document.querySelectorAll('.risk-text')).map(r => '• ' + r.textContent).join('\n');
+  const checklist = Array.from(document.querySelectorAll('.check-text')).map(c => '☐ ' + c.textContent).join('\n');
+  navigator.clipboard.writeText(`${title}\n\nHypothesis:\n${hypothesis}\n\nRisks:\n${risks}\n\nPre-launch checklist:\n${checklist}`).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+  });
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
