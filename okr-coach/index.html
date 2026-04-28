@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OKR Generator & Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f9f7f4;
+    --surface: #ffffff;
+    --surface2: #f2efe9;
+    --border: #e5e1d8;
+    --border-strong: #ccc8bd;
+    --ink: #18170f;
+    --muted: #7a7868;
+    --dim: #c8c5b8;
+    --sage: #2d6a4f;
+    --sage-light: #eaf4ef;
+    --sage-border: #a8d5be;
+    --indigo: #3d3580;
+    --indigo-light: #eeedf8;
+    --indigo-border: #b8b5e0;
+    --coral: #c94f2a;
+    --coral-light: #fdf0ec;
+    --coral-border: #f0b8a8;
+    --gold: #a07828;
+    --gold-light: #fdf8ee;
+    --gold-border: #e0cc88;
+    --display: 'Bricolage Grotesque', sans-serif;
+    --mono: 'Azeret Mono', monospace;
+  }
+
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--display); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  .api-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .api-bar label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 380px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.35rem 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .api-bar input:focus { border-color: var(--indigo); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  header { border-bottom: 1px solid var(--border-strong); padding: 1.1rem 2rem; display: flex; align-items: baseline; gap: 1rem; background: var(--surface); position: sticky; top: 0; z-index: 20; }
+  .logo { font-family: var(--display); font-size: 1.2rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+  .logo em { color: var(--indigo); font-style: normal; }
+  .tagline { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; border-left: 1px solid var(--border-strong); padding-left: 1rem; }
+
+  main { display: grid; grid-template-columns: 390px 1fr; min-height: calc(100vh - 90px); }
+
+  .panel-in { border-right: 1px solid var(--border-strong); background: var(--surface); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+
+  .panel-heading { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); line-height: 1.5; font-weight: 400; }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  input[type="text"], textarea, select {
+    background: var(--bg); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 0.6rem 0.85rem; font-family: var(--display); font-size: 14px; font-weight: 400;
+    color: var(--ink); width: 100%; outline: none; transition: border-color 0.15s; resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--indigo); }
+  textarea { min-height: 80px; line-height: 1.6; }
+  select option { background: var(--surface); }
+
+  /* LEVEL SELECTOR */
+  .level-row { display: flex; gap: 0.5rem; }
+  .level-btn {
+    flex: 1; padding: 0.5rem 0.25rem; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--bg); font-family: var(--mono); font-size: 10px; cursor: pointer;
+    transition: all 0.15s; text-align: center; color: var(--muted); letter-spacing: 0.03em;
+  }
+  .level-btn:hover { border-color: var(--indigo); color: var(--indigo); }
+  .level-btn.active { background: var(--indigo-light); border-color: var(--indigo-border); color: var(--indigo); font-weight: 500; }
+
+  .btn-generate {
+    background: var(--indigo); color: #fff; border: none; border-radius: 6px;
+    padding: 0.85rem; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: -0.01em;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: opacity 0.15s, transform 0.1s; margin-top: auto;
+  }
+  .btn-generate:hover { opacity: 0.88; }
+  .btn-generate:active { transform: scale(0.98); }
+  .btn-generate:disabled { background: var(--dim); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 5px; height: 5px; background: #fff; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT */
+  .panel-out { padding: 2.5rem; overflow-y: auto; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; gap: 1rem; text-align: center; }
+  .empty-glyph { font-size: 5rem; font-weight: 800; color: var(--border-strong); line-height: 1; letter-spacing: -0.05em; }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.05em; max-width: 280px; line-height: 1.7; }
+
+  #results { display: none; }
+
+  .results-top { margin-bottom: 2rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .results-title { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.35rem; }
+
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.45rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* OKR CARDS */
+  .okr-list { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+
+  .okr-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .okr-card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.85rem; }
+  .okr-num { font-family: var(--mono); font-size: 11px; color: var(--indigo); background: var(--indigo-light); border: 1px solid var(--indigo-border); border-radius: 4px; padding: 2px 8px; white-space: nowrap; margin-top: 2px; }
+  .okr-objective { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; }
+
+  .kr-list { padding: 0.85rem 1.25rem; display: flex; flex-direction: column; gap: 0; }
+  .kr-item { padding: 0.65rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: auto 1fr auto; gap: 0.75rem; align-items: start; }
+  .kr-item:last-child { border-bottom: none; }
+  .kr-label { font-family: var(--mono); font-size: 10px; color: var(--muted); padding-top: 2px; white-space: nowrap; }
+  .kr-text { font-size: 13px; line-height: 1.55; font-weight: 400; }
+  .kr-type { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 3px; white-space: nowrap; border: 1px solid; }
+  .kr-metric { color: var(--sage); background: var(--sage-light); border-color: var(--sage-border); }
+  .kr-milestone { color: var(--gold); background: var(--gold-light); border-color: var(--gold-border); }
+
+  /* SMART CHECK */
+  .section { margin-bottom: 2rem; }
+  .section-head { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+
+  .smart-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; }
+  .smart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; text-align: center; }
+  .smart-letter { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.2rem; }
+  .smart-word { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+  .smart-status { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 999px; border: 1px solid; }
+  .smart-pass { color: var(--sage); background: var(--sage-light); border-color: var(--sage-border); }
+  .smart-warn { color: var(--coral); background: var(--coral-light); border-color: var(--coral-border); }
+  .smart-note { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 0.4rem; font-weight: 400; }
+
+  /* TRAPS */
+  .trap-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .trap-card { background: var(--coral-light); border: 1px solid var(--coral-border); border-radius: 6px; padding: 0.85rem 1rem; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .trap-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .trap-text { font-size: 13px; line-height: 1.55; font-weight: 400; }
+
+  .no-traps { font-family: var(--mono); font-size: 12px; color: var(--sage); background: var(--sage-light); border: 1px solid var(--sage-border); border-radius: 6px; padding: 0.75rem 1rem; }
+
+  /* COACHING */
+  .coaching-box { background: var(--indigo-light); border: 1px solid var(--indigo-border); border-radius: 8px; padding: 1.25rem; font-size: 14px; line-height: 1.8; font-weight: 400; color: var(--ink); }
+
+  .bottom-actions { display: flex; gap: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 1px solid var(--border-strong); }
+    .smart-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<header>
+  <div class="logo">OKR<em>.</em>coach</div>
+  <div class="tagline">okr generator & coach // pm-toolkit #07</div>
+</header>
+
+<main>
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Generate & validate OKRs</div>
+      <div class="panel-sub">Input your team's goal and context. Get well-formed OKRs with SMART validation and coaching feedback.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Team or company name</div>
+      <input type="text" id="team" placeholder="e.g. Growth team, Acme Corp" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">OKR level</div>
+      <div class="level-row">
+        <button class="level-btn active" onclick="setLevel(this, 'Company')">Company</button>
+        <button class="level-btn" onclick="setLevel(this, 'Team')">Team</button>
+        <button class="level-btn" onclick="setLevel(this, 'Individual')">Individual</button>
+      </div>
+      <input type="hidden" id="level" value="Company" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Time period</div>
+      <input type="text" id="period" placeholder="e.g. Q3 2026, H2 2026" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Goal or ambition</div>
+      <textarea id="goal" placeholder="Describe what you're trying to achieve this period. Be as specific or rough as you want — the AI will shape it into proper OKRs.
+
+Example: We want to grow our enterprise segment and reduce churn among mid-market customers while improving the onboarding experience."></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Current context</div>
+      <textarea id="context" placeholder="Optional: key metrics, team size, constraints, what didn't work last quarter..." style="min-height:65px;"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Number of objectives</div>
+      <select id="num-objectives">
+        <option value="2">2 objectives</option>
+        <option value="3" selected>3 objectives</option>
+        <option value="4">4 objectives</option>
+      </select>
+    </div>
+
+    <button class="btn-generate" id="gen-btn" onclick="generateOKRs()">
+      <span id="btn-text">Generate OKRs →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">O·K·R</div>
+      <p>Describe your goal and get well-formed OKRs with SMART validation and coaching.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-top">
+        <div>
+          <div class="results-title" id="out-title"></div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+        <button class="btn-ghost" onclick="resetAll()">New OKRs</button>
+      </div>
+
+      <div class="okr-list" id="okr-list"></div>
+
+      <div class="section">
+        <div class="section-head">SMART validation</div>
+        <div class="smart-grid" id="smart-grid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Common OKR traps flagged</div>
+        <div id="traps"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Coaching notes</div>
+        <div class="coaching-box" id="coaching"></div>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="copyResults()">Copy as text</button>
+        <button class="btn-ghost" onclick="resetAll()">New OKRs</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+let currentLevel = 'Company';
+
+function setLevel(btn, val) {
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentLevel = val;
+  document.getElementById('level').value = val;
+}
+
+async function generateOKRs() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const team = document.getElementById('team').value.trim();
+  const period = document.getElementById('period').value.trim();
+  const goal = document.getElementById('goal').value.trim();
+  const context = document.getElementById('context').value.trim();
+  const numObj = document.getElementById('num-objectives').value;
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!goal) { alert('Please describe your goal.'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are an OKR coach and senior product leader helping a team write high-quality OKRs.
+
+Team / company: ${team || 'The team'}
+OKR level: ${currentLevel}
+Time period: ${period || 'This quarter'}
+Number of objectives: ${numObj}
+Goal / ambition: ${goal}
+${context ? 'Context: ' + context : ''}
+
+Generate ${numObj} well-formed OKRs and return ONLY valid JSON, no markdown, no backticks.
+
+{
+  "okrs": [
+    {
+      "objective": "Inspiring, qualitative objective statement — not a metric, should motivate",
+      "key_results": [
+        { "kr": "Specific measurable key result with a number and baseline", "type": "Metric" },
+        { "kr": "Specific measurable key result", "type": "Metric" },
+        { "kr": "Milestone-based key result", "type": "Milestone" }
+      ]
+    }
+  ],
+  "smart_check": {
+    "specific": { "pass": true, "note": "Brief note on specificity of these OKRs" },
+    "measurable": { "pass": true, "note": "Brief note on measurability" },
+    "achievable": { "pass": true, "note": "Brief note on whether targets seem realistic" },
+    "relevant": { "pass": true, "note": "Brief note on strategic alignment" },
+    "time_bound": { "pass": true, "note": "Brief note on time-boxing" }
+  },
+  "traps": [
+    "Description of an OKR anti-pattern or trap present in these OKRs, if any"
+  ],
+  "coaching": "2-3 sentences of coaching advice for this team. What should they watch out for? What would make these OKRs stronger? Speak directly to the team."
+}
+
+OKR rules to follow:
+- Objectives must be qualitative, inspiring, and not contain numbers
+- Key results must be quantitative (Metric) or clearly defined milestones (Milestone)
+- Each objective should have 2-4 key results
+- Avoid output-based KRs (e.g. 'launch X') — prefer outcome-based (e.g. 'increase X by Y%')
+- If no traps are present, return an empty array for traps
+- smart_check pass values must be boolean true or false`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, team, period);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, team, period) {
+  document.getElementById('out-title').textContent = (team || 'Team') + ' OKRs';
+  document.getElementById('out-meta').textContent = `${period || 'This quarter'} · ${currentLevel} level · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+  // OKR cards
+  document.getElementById('okr-list').innerHTML = r.okrs.map((okr, i) => `
+    <div class="okr-card">
+      <div class="okr-card-header">
+        <span class="okr-num">O${i + 1}</span>
+        <div class="okr-objective">${okr.objective}</div>
+      </div>
+      <div class="kr-list">
+        ${okr.key_results.map((kr, j) => `
+          <div class="kr-item">
+            <div class="kr-label">KR${i + 1}.${j + 1}</div>
+            <div class="kr-text">${kr.kr}</div>
+            <span class="kr-type ${kr.type === 'Metric' ? 'kr-metric' : 'kr-milestone'}">${kr.type}</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // SMART check
+  const smart = r.smart_check;
+  const smartItems = [
+    { letter: 'S', word: 'Specific', key: 'specific' },
+    { letter: 'M', word: 'Measurable', key: 'measurable' },
+    { letter: 'A', word: 'Achievable', key: 'achievable' },
+    { letter: 'R', word: 'Relevant', key: 'relevant' },
+    { letter: 'T', word: 'Time-bound', key: 'time_bound' },
+  ];
+  document.getElementById('smart-grid').innerHTML = smartItems.map(s => `
+    <div class="smart-card">
+      <div class="smart-letter" style="color:${smart[s.key].pass ? 'var(--sage)' : 'var(--coral)'}">${s.letter}</div>
+      <div class="smart-word">${s.word}</div>
+      <span class="smart-status ${smart[s.key].pass ? 'smart-pass' : 'smart-warn'}">${smart[s.key].pass ? 'Pass' : 'Review'}</span>
+      <div class="smart-note">${smart[s.key].note}</div>
+    </div>`).join('');
+
+  // Traps
+  const trapsEl = document.getElementById('traps');
+  if (!r.traps || r.traps.length === 0) {
+    trapsEl.innerHTML = `<div class="no-traps">✓ No common OKR traps detected in these objectives and key results.</div>`;
+  } else {
+    trapsEl.innerHTML = `<div class="trap-list">${r.traps.map(t => `
+      <div class="trap-card">
+        <div class="trap-icon">⚠</div>
+        <div class="trap-text">${t}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  // Coaching
+  document.getElementById('coaching').textContent = r.coaching;
+
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function copyResults() {
+  const title = document.getElementById('out-title').textContent;
+  const okrs = Array.from(document.querySelectorAll('.okr-card')).map((card, i) => {
+    const obj = card.querySelector('.okr-objective').textContent;
+    const krs = Array.from(card.querySelectorAll('.kr-text')).map((k, j) => `  KR${i+1}.${j+1}: ${k.textContent}`).join('\n');
+    return `O${i+1}: ${obj}\n${krs}`;
+  }).join('\n\n');
+  const coaching = document.getElementById('coaching').textContent;
+  navigator.clipboard.writeText(`${title}\n\n${okrs}\n\nCoaching:\n${coaching}`).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+  });
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
