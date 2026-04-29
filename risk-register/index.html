@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Risk Register Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f6f2;
+    --surface: #ffffff;
+    --surface2: #f0ede7;
+    --border: #e2ddd5;
+    --border-strong: #ccc7bc;
+    --ink: #1a1814;
+    --muted: #7c7870;
+    --dim: #c5c0b8;
+    --red: #b91c1c;
+    --red-light: #fef2f2;
+    --red-border: #fecaca;
+    --amber: #b45309;
+    --amber-light: #fffbeb;
+    --amber-border: #fde68a;
+    --green: #15803d;
+    --green-light: #f0fdf4;
+    --green-border: #bbf7d0;
+    --blue: #1d4ed8;
+    --blue-light: #eff6ff;
+    --blue-border: #bfdbfe;
+    --display: 'Instrument Serif', Georgia, serif;
+    --sans: 'Instrument Sans', sans-serif;
+    --mono: 'Roboto Mono', monospace;
+  }
+
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  .api-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .api-bar label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 380px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0.35rem 0.75rem; font-family: var(--mono); font-size: 12px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .api-bar input:focus { border-color: var(--red); }
+  .api-bar .hint { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  header { border-bottom: 2px solid var(--ink); padding: 1.1rem 2rem; display: flex; align-items: baseline; gap: 1rem; background: var(--surface); position: sticky; top: 0; z-index: 20; }
+  .logo { font-family: var(--display); font-size: 1.3rem; font-style: italic; color: var(--ink); }
+  .logo span { color: var(--red); font-style: normal; font-family: var(--sans); font-size: 1rem; }
+  .tagline { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; border-left: 2px solid var(--border-strong); padding-left: 1rem; }
+
+  main { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 90px); }
+
+  .panel-in { border-right: 2px solid var(--ink); background: var(--surface2); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+  .panel-heading { font-family: var(--display); font-size: 1.1rem; font-style: italic; margin-bottom: 0.2rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  input[type="text"], textarea, select {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 4px;
+    padding: 0.6rem 0.85rem; font-family: var(--sans); font-size: 14px;
+    color: var(--ink); width: 100%; outline: none; transition: border-color 0.15s; resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--red); }
+  textarea { min-height: 80px; line-height: 1.6; }
+  select option { background: var(--surface); }
+
+  /* PHASE CHECKBOXES */
+  .phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .phase-check { display: flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0.45rem 0.75rem; cursor: pointer; transition: all 0.15s; }
+  .phase-check:hover { border-color: var(--red); }
+  .phase-check input { accent-color: var(--red); cursor: pointer; }
+  .phase-check label { font-size: 13px; cursor: pointer; }
+
+  .btn-build {
+    background: var(--ink); color: var(--bg); border: none; border-radius: 4px;
+    padding: 0.85rem; font-family: var(--sans); font-weight: 600; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: background 0.15s, transform 0.1s; margin-top: auto;
+  }
+  .btn-build:hover { background: var(--red); }
+  .btn-build:active { transform: scale(0.98); }
+  .btn-build:disabled { background: var(--dim); cursor: not-allowed; }
+
+  .dot-loader { display: none; gap: 4px; align-items: center; }
+  .dot-loader span { width: 5px; height: 5px; background: var(--bg); border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+  /* OUTPUT */
+  .panel-out { padding: 2.5rem; overflow-y: auto; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; gap: 1rem; text-align: center; }
+  .empty-glyph { font-family: var(--display); font-size: 5rem; font-style: italic; color: var(--border-strong); line-height: 1; }
+  .empty-state p { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.05em; max-width: 280px; line-height: 1.7; }
+
+  #results { display: none; }
+
+  .results-top { border-bottom: 2px solid var(--ink); padding-bottom: 1.25rem; margin-bottom: 1.75rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .results-eyebrow { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+  .results-title { font-family: var(--display); font-size: 1.8rem; font-style: italic; line-height: 1.2; }
+  .results-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 0.3rem; }
+
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0.45rem 1rem; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* RISK MATRIX */
+  .section { margin-bottom: 2rem; }
+  .section-head { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+  .section-count { font-family: var(--mono); font-size: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; }
+
+  /* FILTER TABS */
+  .filter-row { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .filter-btn { font-family: var(--mono); font-size: 10px; padding: 0.25rem 0.75rem; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; letter-spacing: 0.03em; }
+  .filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .filter-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .filter-btn.f-critical.active { background: var(--red); border-color: var(--red); }
+  .filter-btn.f-high.active { background: var(--amber); border-color: var(--amber); }
+  .filter-btn.f-medium.active { background: var(--green); border-color: var(--green); }
+
+  /* RISK CARDS */
+  .risk-register { display: flex; flex-direction: column; gap: 0.75rem; }
+  .risk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; transition: box-shadow 0.15s; }
+  .risk-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .risk-card-top { padding: 0.85rem 1rem; display: grid; grid-template-columns: auto 1fr auto auto; gap: 0.85rem; align-items: start; border-bottom: 1px solid var(--border); }
+  .risk-id { font-family: var(--mono); font-size: 10px; color: var(--muted); padding-top: 2px; white-space: nowrap; }
+  .risk-title { font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .risk-category { font-family: var(--mono); font-size: 10px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; white-space: nowrap; }
+  .risk-level { font-family: var(--mono); font-size: 10px; padding: 2px 10px; border-radius: 999px; border: 1px solid; white-space: nowrap; font-weight: 500; }
+  .level-critical { color: var(--red); background: var(--red-light); border-color: var(--red-border); }
+  .level-high { color: var(--amber); background: var(--amber-light); border-color: var(--amber-border); }
+  .level-medium { color: var(--green); background: var(--green-light); border-color: var(--green-border); }
+  .level-low { color: var(--muted); background: var(--surface2); border-color: var(--border-strong); }
+
+  .risk-card-bottom { padding: 0.75rem 1rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+  .risk-detail-label { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.06em; margin-bottom: 0.2rem; }
+  .risk-detail-text { font-size: 12px; line-height: 1.5; color: var(--ink); }
+
+  /* SCORE PILLS */
+  .score-row { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.3rem; }
+  .score-pill { font-family: var(--mono); font-size: 10px; padding: 1px 7px; border-radius: 3px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); }
+
+  /* SUMMARY STATS */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.85rem 1rem; text-align: center; }
+  .stat-num { font-family: var(--display); font-size: 2rem; font-style: italic; line-height: 1; margin-bottom: 0.2rem; }
+  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+
+  /* OVERALL ASSESSMENT */
+  .assessment-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; font-size: 14px; line-height: 1.8; border-top: 3px solid var(--red); }
+
+  .bottom-actions { display: flex; gap: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel-in { border-right: none; border-bottom: 2px solid var(--ink); }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .risk-card-bottom { grid-template-columns: 1fr; }
+    .risk-card-top { grid-template-columns: auto 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." />
+  <span class="hint">stored in your browser only</span>
+</div>
+
+<header>
+  <div class="logo">Risk <span>Register</span></div>
+  <div class="tagline">risk register builder // pm-toolkit #09</div>
+</header>
+
+<main>
+  <aside class="panel-in">
+    <div>
+      <div class="panel-heading">Build your risk register</div>
+      <div class="panel-sub">Describe your project and the AI identifies, scores, and mitigates risks across key categories.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Project name</div>
+      <input type="text" id="project-name" placeholder="e.g. Mobile app relaunch" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Project description</div>
+      <textarea id="project-desc" placeholder="What is this project? What's the scope, timeline, and goal?"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Team & stakeholders</div>
+      <input type="text" id="team" placeholder="e.g. 6 engineers, 1 designer, exec sponsor" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Timeline</div>
+      <input type="text" id="timeline" placeholder="e.g. 3 months, launching July 2026" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">Known constraints or concerns</div>
+      <textarea id="concerns" placeholder="Anything you're already worried about — technical debt, third-party dependencies, team bandwidth, regulatory..." style="min-height:65px;"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Risk categories to include</div>
+      <div class="phase-grid">
+        <label class="phase-check"><input type="checkbox" value="Technical" checked /><label>Technical</label></label>
+        <label class="phase-check"><input type="checkbox" value="Schedule" checked /><label>Schedule</label></label>
+        <label class="phase-check"><input type="checkbox" value="Resource" checked /><label>Resource</label></label>
+        <label class="phase-check"><input type="checkbox" value="Stakeholder" checked /><label>Stakeholder</label></label>
+        <label class="phase-check"><input type="checkbox" value="Market" checked /><label>Market</label></label>
+        <label class="phase-check"><input type="checkbox" value="Compliance" checked /><label>Compliance</label></label>
+      </div>
+    </div>
+
+    <button class="btn-build" id="build-btn" onclick="buildRegister()">
+      <span id="btn-text">Build risk register →</span>
+      <div class="dot-loader" id="loader"><span></span><span></span><span></span></div>
+    </button>
+  </aside>
+
+  <section class="panel-out">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">R</div>
+      <p>Describe your project to generate a scored risk register with mitigations.</p>
+    </div>
+
+    <div id="results">
+      <div class="results-top">
+        <div>
+          <div class="results-eyebrow">RISK REGISTER</div>
+          <div class="results-title" id="out-title"></div>
+          <div class="results-meta" id="out-meta"></div>
+        </div>
+        <button class="btn-ghost" onclick="resetAll()">New register</button>
+      </div>
+
+      <div class="stats-bar" id="stats-bar"></div>
+
+      <div class="section">
+        <div class="section-head">
+          Identified risks
+          <span class="section-count" id="risk-count"></span>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterRisks('all', this)">All</button>
+          <button class="filter-btn f-critical" onclick="filterRisks('Critical', this)">Critical</button>
+          <button class="filter-btn f-high" onclick="filterRisks('High', this)">High</button>
+          <button class="filter-btn f-medium" onclick="filterRisks('Medium', this)">Medium</button>
+          <button class="filter-btn" onclick="filterRisks('Low', this)">Low</button>
+        </div>
+        <div class="risk-register" id="risk-register"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Overall assessment</div>
+        <div class="assessment-box" id="assessment"></div>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-ghost" onclick="copyResults()">Copy as text</button>
+        <button class="btn-ghost" onclick="resetAll()">New register</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+let allRisks = [];
+
+async function buildRegister() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  const projectName = document.getElementById('project-name').value.trim();
+  const projectDesc = document.getElementById('project-desc').value.trim();
+  const team = document.getElementById('team').value.trim();
+  const timeline = document.getElementById('timeline').value.trim();
+  const concerns = document.getElementById('concerns').value.trim();
+  const categories = Array.from(document.querySelectorAll('.phase-check input:checked')).map(c => c.value);
+
+  if (!apiKey) { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!projectDesc) { alert('Please describe your project.'); return; }
+  if (!categories.length) { alert('Please select at least one risk category.'); return; }
+
+  const btn = document.getElementById('build-btn');
+  const loader = document.getElementById('loader');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  loader.style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are a senior project manager and risk specialist building a risk register.
+
+Project: ${projectName || 'Unnamed project'}
+Description: ${projectDesc}
+Team: ${team || 'Not specified'}
+Timeline: ${timeline || 'Not specified'}
+Known concerns: ${concerns || 'None provided'}
+Risk categories to cover: ${categories.join(', ')}
+
+Identify risks across all specified categories and return ONLY valid JSON, no markdown, no backticks.
+
+{
+  "risks": [
+    {
+      "id": "R01",
+      "title": "Short risk title",
+      "category": "Technical",
+      "description": "Clear description of the risk and how it could materialize",
+      "probability": "High",
+      "impact": "High",
+      "level": "Critical",
+      "mitigation": "Specific, actionable mitigation strategy",
+      "owner": "Role responsible e.g. Tech Lead, PM, Exec Sponsor"
+    }
+  ],
+  "assessment": "3-4 sentence overall risk assessment for this project. What is the biggest risk area? Is the project overall low/medium/high risk? What should the PM prioritize immediately?"
+}
+
+Rules:
+- Generate 8-12 risks spread across the specified categories
+- probability must be exactly: Low, Medium, High
+- impact must be exactly: Low, Medium, High
+- level must be exactly: Low, Medium, High, Critical
+  - Critical = High probability + High impact
+  - High = High probability + Medium impact, OR Medium probability + High impact
+  - Medium = Medium probability + Medium impact, or other mid combinations
+  - Low = Low probability and/or Low impact
+- Mitigations must be specific and actionable, not generic
+- Owner should be a role, not a person's name
+- Sort risks by level: Critical first, then High, Medium, Low`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert('API error: ' + data.error.message); return; }
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, projectName, timeline);
+  } catch (err) {
+    alert('Something went wrong. Check your API key and try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    loader.style.display = 'none';
+  }
+}
+
+function renderResults(r, projectName, timeline) {
+  allRisks = r.risks;
+
+  document.getElementById('out-title').textContent = projectName || 'Project Risk Register';
+  document.getElementById('out-meta').textContent = `${allRisks.length} risks identified · ${timeline || ''} · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+  document.getElementById('risk-count').textContent = allRisks.length;
+
+  // Stats
+  const critical = allRisks.filter(r => r.level === 'Critical').length;
+  const high = allRisks.filter(r => r.level === 'High').length;
+  const medium = allRisks.filter(r => r.level === 'Medium').length;
+  const low = allRisks.filter(r => r.level === 'Low').length;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--red)">${critical}</div>
+      <div class="stat-label">CRITICAL</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--amber)">${high}</div>
+      <div class="stat-label">HIGH</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green)">${medium}</div>
+      <div class="stat-label">MEDIUM</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--muted)">${low}</div>
+      <div class="stat-label">LOW</div>
+    </div>`;
+
+  renderRisks(allRisks);
+  document.getElementById('assessment').textContent = r.assessment;
+  document.getElementById('results').style.display = 'block';
+  document.querySelector('.panel-out').scrollTop = 0;
+}
+
+function renderRisks(risks) {
+  document.getElementById('risk-register').innerHTML = risks.map(risk => `
+    <div class="risk-card" data-level="${risk.level}">
+      <div class="risk-card-top">
+        <div class="risk-id">${risk.id}</div>
+        <div class="risk-title">${risk.title}</div>
+        <span class="risk-category">${risk.category}</span>
+        <span class="risk-level ${risk.level === 'Critical' ? 'level-critical' : risk.level === 'High' ? 'level-high' : risk.level === 'Medium' ? 'level-medium' : 'level-low'}">${risk.level}</span>
+      </div>
+      <div class="risk-card-bottom">
+        <div>
+          <div class="risk-detail-label">DESCRIPTION</div>
+          <div class="risk-detail-text">${risk.description}</div>
+          <div class="score-row">
+            <span class="score-pill">P: ${risk.probability}</span>
+            <span class="score-pill">I: ${risk.impact}</span>
+          </div>
+        </div>
+        <div>
+          <div class="risk-detail-label">MITIGATION</div>
+          <div class="risk-detail-text">${risk.mitigation}</div>
+        </div>
+        <div>
+          <div class="risk-detail-label">OWNER</div>
+          <div class="risk-detail-text">${risk.owner}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterRisks(level, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = level === 'all' ? allRisks : allRisks.filter(r => r.level === level);
+  renderRisks(filtered);
+  document.getElementById('risk-count').textContent = filtered.length;
+}
+
+function copyResults() {
+  const title = document.getElementById('out-title').textContent;
+  const risks = allRisks.map(r => `[${r.level}] ${r.id} — ${r.title}\nCategory: ${r.category} | P: ${r.probability} | I: ${r.impact}\nMitigation: ${r.mitigation}\nOwner: ${r.owner}`).join('\n\n');
+  const assessment = document.getElementById('assessment').textContent;
+  navigator.clipboard.writeText(`${title}\n\n${risks}\n\nOverall Assessment:\n${assessment}`).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+  });
+}
+
+function resetAll() {
+  allRisks = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+}
+</script>
+</body>
+</html>
